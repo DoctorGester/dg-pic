@@ -1,16 +1,20 @@
 import wx
 
 
-class ImagePanel(wx.Panel):
+class ImagePanel(wx.PyScrolledWindow):
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent=parent)
+        wx.PyScrolledWindow.__init__(self, parent=parent)
         self.SetBackgroundStyle(wx.BG_STYLE_ERASE)
         self.frame = parent
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.on_erase)
         self.bitmap = wx.NullBitmap
 
     def set_bitmap(self, bitmap):
+        w = bitmap.GetWidth()
+        h = bitmap.GetHeight()
+
         self.bitmap = bitmap
+        self.SetScrollbars(10, 10, w / 10, h / 10)
         self.Refresh()
 
     def on_erase(self, evt):
@@ -20,6 +24,8 @@ class ImagePanel(wx.Panel):
             dc = wx.ClientDC(self)
             rect = self.GetUpdateRegion().GetBox()
             dc.SetClippingRect(rect)
+
+        self.PrepareDC(dc)
 
         dc.Clear()
 

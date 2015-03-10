@@ -1,29 +1,23 @@
 import json
 import os.path
 
-special_keys = ('file_name', 'transaction', 'data')
+special_keys = ('file_name', 'transaction', 'data', 'modify_time')
 
 
 class Config:
 
     def __init__(self, file_name):
-        if not os.path.isfile(file_name):
-            file_data = open(file_name, 'w+')
-        else:
-            file_data = open(file_name, 'r+')
-
         self.file_name = file_name
         self.transaction = False
+        self.data = None
+        self.modify_time = 0
 
-        try:
-            self.data = json.load(file_data)
-        except ValueError:
-            self.data = {}
-            json.dump(self.data, file_data)
-
-        file_data.close()
+        self.load_file()
 
     def __getattr__(self, item):
+        if self.modify_time != os.path.getmtime(self.file_name):
+            self.load_file()
+
         return self.data[item]
 
     def __setattr__(self, key, value):
@@ -35,6 +29,22 @@ class Config:
 
         if not self.transaction:
             self.save_file()
+
+    def load_file(self):
+        if not os.path.isfile(self.file_name):
+            file_data = open(self.file_name, 'w+')
+        else:
+            file_data = open(self.file_name, 'r+')
+
+        self.modify_time = os.path.getmtime(self.file_name)
+
+        try:
+            self.data = json.load(file_data)
+        except ValueError:
+            self.data = {}
+            json.dump(self.data, file_data)
+
+        file_data.close()
 
     def save_file(self):
         file_data = open(self.file_name, 'w+')

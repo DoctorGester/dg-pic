@@ -4,7 +4,7 @@ import requests
 import io
 import capture
 import imagepanel
-import  wx.lib.scrolledpanel as scrolledpanel
+import traycontrol
 
 from config import Config
 
@@ -21,11 +21,13 @@ class AppFrame(wx.Frame):
         self.full_screen = None
         self.screen_shot = None
         self.image_panel = None
-        self.scrolled_panel = None
+        self.config = None
+        self.tray_control = traycontrol.TrayIcon(self)
 
         self.RegisterHotKey(0, win32con.MOD_ALT, win32con.VK_F1)
         self.Bind(wx.EVT_HOTKEY, self.on_capture_key, id=0)
         self.Bind(wx.EVT_CLOSE, self.on_close)
+        self.Bind(wx.EVT_ICONIZE, self.on_iconify)
         self.create_ui()
         self.Center()
         self.Show()
@@ -33,19 +35,10 @@ class AppFrame(wx.Frame):
         self.read_config()
 
     def create_ui(self):
-        self.scrolled_panel = scrolledpanel.ScrolledPanel(self, -1)
-
-        v_box = wx.BoxSizer(wx.VERTICAL)
-        self.image_panel = imagepanel.ImagePanel(self.scrolled_panel)
-
-        v_box.Add(self.image_panel, 0, wx.ALIGN_LEFT | wx.ALL, 5)
-
-        self.scrolled_panel.SetSizer(v_box)
-        self.scrolled_panel.SetAutoLayout(1)
-        self.scrolled_panel.SetupScrolling()
+        self.image_panel = imagepanel.ImagePanel(self)
 
     def read_config(self):
-        config = Config("config.json")
+        self.config = Config("config.json")
 
     def close_capture_frames(self):
         for frame in self.capture_frames:
@@ -141,9 +134,20 @@ class AppFrame(wx.Frame):
             self.set_screen_shot(self.full_screen)
             self.close_capture_frames()
 
+    def on_iconify(self, event):
+        if self.IsIconized() and not self.config.minimize_on_close:  # This is dumb, but absolutely needed
+            self.Hide()
+
+    def show(self):
+        self.Show()
+        self.Restore()
+
     def on_close(self, event):
-        self.Destroy()
-        app.Exit()
+        if self.config.minimize_on_close:
+            self.Hide()
+        else:
+            self.Destroy()
+            app.Exit()
 
     @staticmethod
     def get_full_screen():
