@@ -5,14 +5,16 @@ import io
 import capture
 import imagepanel
 import traycontrol
-
-from config import Config
+import config
 
 
 class AppFrame(wx.Frame):
 
     def __init__(self, application):
         wx.Frame.__init__(self, None, -1, "dg-pic")
+
+        self.config = config.Config("config.json")
+
         self.app = application
         self.capture_frames = []
         self.in_selection = False
@@ -21,10 +23,11 @@ class AppFrame(wx.Frame):
         self.full_screen = None
         self.screen_shot = None
         self.image_panel = None
-        self.config = None
         self.tray_control = traycontrol.TrayIcon(self)
 
-        self.RegisterHotKey(0, win32con.MOD_ALT, win32con.VK_F1)
+        mod, key = self.get_capture_key()
+
+        self.RegisterHotKey(0, mod, key)
         self.Bind(wx.EVT_HOTKEY, self.on_capture_key, id=0)
         self.Bind(wx.EVT_CLOSE, self.on_close)
         self.Bind(wx.EVT_ICONIZE, self.on_iconify)
@@ -32,13 +35,32 @@ class AppFrame(wx.Frame):
         self.Center()
         self.Show()
 
-        self.read_config()
-
     def create_ui(self):
         self.image_panel = imagepanel.ImagePanel(self)
 
-    def read_config(self):
-        self.config = Config("config.json")
+    def get_capture_key(self):
+        try:
+            config_string = str(self.config.capture_shortcut.upper())
+            words = str.split(config_string, "-")
+            splitter = len(words) - 1
+            mods = words[:splitter]
+            key = words[splitter:][0]
+
+            final_mod = 0
+
+            for mod in mods:
+                final_mod = final_mod | getattr(win32con, "MOD_" + mod)
+
+            final_key = ord(key)
+
+            if len(key) > 1 and hasattr(win32con, "VK_" + key):
+                final_key = getattr(win32con, "VK_" + key)
+
+            return final_mod, final_key
+        except StandardError:
+            self.config.capture_shortcut = "alt-shift-s"
+
+            return self.get_capture_key()
 
     def close_capture_frames(self):
         for frame in self.capture_frames:
@@ -55,7 +77,7 @@ class AppFrame(wx.Frame):
             "image": ("captured.png", stream.getvalue())
         }
 
-        response = requests.post("http://dg-pic.tk/upload_test", files=files)
+        response = requests.post("http://dg-pic.tk/upload", files=files)
 
         print response.text
 
@@ -141,6 +163,8 @@ class AppFrame(wx.Frame):
     def show(self):
         self.Show()
         self.Restore()
+        self.Raise()
+        self.SetFocus()
 
     def on_close(self, event):
         if self.config.minimize_on_close:

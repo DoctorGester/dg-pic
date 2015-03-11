@@ -1,3 +1,4 @@
 {
-  "minimize_on_close": true
+    "capture_shortcut": "alt-shift-s",
+    "minimize_on_close": true
 }
