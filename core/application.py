@@ -82,13 +82,16 @@ class AppFrame(wx.Frame):
             "image": ("captured.png", stream.getvalue())
         }
 
-        response = requests.post("http://dg-pic.tk/upload", files=files)
+        response = requests.post("http://dg-pic.tk/upload?version=1", files=files)
+        parsed = json.loads(response.text)
 
-        url = AppFrame.get_image_url(response)
-        print url
+        if parsed["success"] is False:
+            print parsed["message"]
+        else:
+            url = AppFrame.get_image_url(response)
 
-        if self.config.put_url_into_clipboard:
-            clipboard.set_data(url)
+            if self.config.put_url_into_clipboard:
+                clipboard.set_data(url)
 
     def screen_shot_from_selection(self, selection):
         bitmap = wx.EmptyBitmap(selection.width, selection.height)
@@ -106,7 +109,7 @@ class AppFrame(wx.Frame):
         self.Refresh()
 
         if self.config.upload_after_capture:
-            self.send()
+            wx.CallAfter(self.send)
 
     def get_selection_rect(self):
         x_min = min(self.selection_start[0], self.selection_end[0])
