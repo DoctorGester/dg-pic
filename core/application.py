@@ -8,6 +8,7 @@ import traycontrol
 import config
 import json
 import clipboard
+import upload
 
 
 class AppFrame(wx.Frame):
@@ -73,6 +74,9 @@ class AppFrame(wx.Frame):
         if self.config.show_app_after_capture:
             self.show()
 
+    def upload_progress(self, size=None, progress=None):
+        print("{0} / {1}".format(progress, size))
+
     def send(self):
         image = self.screen_shot.ConvertToImage()
         stream = io.BytesIO()
@@ -82,7 +86,7 @@ class AppFrame(wx.Frame):
             "image": ("captured.png", stream.getvalue())
         }
 
-        response = requests.post("http://dg-pic.tk/upload?version=1", files=files)
+        response = upload.upload_file("http://dg-pic.tk/upload?version=1", files, self.upload_progress)
         parsed = json.loads(response.text)
 
         if parsed["success"] is False:
