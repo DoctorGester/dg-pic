@@ -6,6 +6,8 @@ import capture
 import imagepanel
 import traycontrol
 import config
+import json
+import clipboard
 
 
 class AppFrame(wx.Frame):
@@ -68,6 +70,9 @@ class AppFrame(wx.Frame):
 
         self.capture_frames = []
 
+        if self.config.show_app_after_capture:
+            self.show()
+
     def send(self):
         image = self.screen_shot.ConvertToImage()
         stream = io.BytesIO()
@@ -79,7 +84,11 @@ class AppFrame(wx.Frame):
 
         response = requests.post("http://dg-pic.tk/upload", files=files)
 
-        print response.text
+        url = AppFrame.get_image_url(response)
+        print url
+
+        if self.config.put_url_into_clipboard:
+            clipboard.set_data(url)
 
     def screen_shot_from_selection(self, selection):
         bitmap = wx.EmptyBitmap(selection.width, selection.height)
@@ -95,6 +104,9 @@ class AppFrame(wx.Frame):
         self.screen_shot = screen_shot
         self.image_panel.set_bitmap(self.screen_shot)
         self.Refresh()
+
+        if self.config.upload_after_capture:
+            self.send()
 
     def get_selection_rect(self):
         x_min = min(self.selection_start[0], self.selection_end[0])
@@ -172,6 +184,11 @@ class AppFrame(wx.Frame):
         else:
             self.Destroy()
             app.Exit()
+
+    @staticmethod
+    def get_image_url(response):
+        url = json.loads(response.text)["answer"]["url"]
+        return "http://dg-pic.tk/" + url
 
     @staticmethod
     def get_full_screen():
