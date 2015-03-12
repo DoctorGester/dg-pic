@@ -2,6 +2,6 @@
     "capture_shortcut": "alt-shift-s",
     "minimize_on_close": true,
     "put_url_into_clipboard": true,
-    "upload_after_capture": true,
+    "upload_after_capture": false,
     "show_app_after_capture": true
 }

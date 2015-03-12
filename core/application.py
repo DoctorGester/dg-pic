@@ -1,6 +1,5 @@
 import wx
 import win32con
-import requests
 import io
 import capture
 import imagepanel
@@ -9,6 +8,7 @@ import config
 import json
 import clipboard
 import upload
+import ui
 
 
 class AppFrame(wx.Frame):
@@ -25,8 +25,9 @@ class AppFrame(wx.Frame):
         self.selection_end = (0, 0)
         self.full_screen = None
         self.screen_shot = None
-        self.image_panel = None
+        self.image_panel = imagepanel.ImagePanel(self)
         self.tray_control = traycontrol.TrayIcon(self)
+        self.ui = ui.UI(self)
 
         mod, key = self.get_capture_key()
 
@@ -34,12 +35,8 @@ class AppFrame(wx.Frame):
         self.Bind(wx.EVT_HOTKEY, self.on_capture_key, id=0)
         self.Bind(wx.EVT_CLOSE, self.on_close)
         self.Bind(wx.EVT_ICONIZE, self.on_iconify)
-        self.create_ui()
         self.Center()
         self.Show()
-
-    def create_ui(self):
-        self.image_panel = imagepanel.ImagePanel(self)
 
     def get_capture_key(self):
         try:
