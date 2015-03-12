@@ -15,6 +15,12 @@ class TrayIcon(wx.TaskBarIcon):
         icon = wx.IconFromBitmap(wx.Bitmap(path))
         self.SetIcon(icon, TRAY_TOOLTIP)
 
+    def show_info(self, text):
+        self.ShowBalloon("Notification", text, flags=wx.ICON_INFORMATION)
+
+    def show_error(self, text):
+        self.ShowBalloon("Error", text, flags=wx.ICON_ERROR)
+
     # override
     def CreatePopupMenu(self):
         menu = wx.Menu()

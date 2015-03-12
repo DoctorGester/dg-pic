@@ -31,12 +31,15 @@ class AppFrame(wx.Frame):
 
         mod, key = self.get_capture_key()
 
-        self.RegisterHotKey(0, mod, key)
+        print self.RegisterHotKey(0, mod, key)
         self.Bind(wx.EVT_HOTKEY, self.on_capture_key, id=0)
         self.Bind(wx.EVT_CLOSE, self.on_close)
         self.Bind(wx.EVT_ICONIZE, self.on_iconify)
         self.Center()
         self.Show()
+
+        if self.config.start_minimized:
+            self.Iconize(True)
 
     def get_capture_key(self):
         try:
@@ -83,16 +86,25 @@ class AppFrame(wx.Frame):
             "image": ("captured.png", stream.getvalue())
         }
 
+        if self.config.show_balloons:
+            self.tray_control.show_info("Upload has started")
+
         response = upload.upload_file("http://dg-pic.tk/upload?version=1", files, self.upload_progress)
         parsed = json.loads(response.text)
 
         if parsed["success"] is False:
+            if self.config.show_balloons:
+                self.tray_control.show_error("Upload error: " + parsed["message"])
+
             print parsed["message"]
         else:
             url = AppFrame.get_image_url(response)
 
             if self.config.put_url_into_clipboard:
                 clipboard.set_data(url)
+
+                if self.config.show_balloons:
+                    self.tray_control.show_info("Uploaded to: " + url)
 
     def screen_shot_from_selection(self, selection):
         bitmap = wx.EmptyBitmap(selection.width, selection.height)
