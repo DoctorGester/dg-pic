@@ -2,7 +2,6 @@ import wx
 import win32con
 import io
 import capture
-import imagepanel
 import traycontrol
 import config
 import json
@@ -25,7 +24,7 @@ class AppFrame(wx.Frame):
         self.selection_end = (0, 0)
         self.full_screen = None
         self.screen_shot = None
-        self.image_panel = imagepanel.ImagePanel(self)
+        self.last_uploaded_url = None
         self.tray_control = traycontrol.TrayIcon(self)
         self.ui = ui.UI(self)
 
@@ -118,7 +117,7 @@ class AppFrame(wx.Frame):
 
     def set_screen_shot(self, screen_shot):
         self.screen_shot = screen_shot
-        self.image_panel.set_bitmap(self.screen_shot)
+        self.ui.set_screen_shot(screen_shot)
         self.Refresh()
 
         if self.config.upload_after_capture:
@@ -181,7 +180,9 @@ class AppFrame(wx.Frame):
             amount = range(wx.Display.GetCount())
             self.capture_frames = [capture.CaptureFrame(self, wx.Display(i), self.full_screen) for i in amount]
         else:
-            self.set_screen_shot(self.full_screen)
+            if self.config.double_press_captures_full_screen:
+                self.set_screen_shot(self.full_screen)
+
             self.close_capture_frames()
 
     def on_iconify(self, event):

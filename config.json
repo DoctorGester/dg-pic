@@ -5,5 +5,6 @@
     "upload_after_capture": false,
     "show_app_after_capture": true,
     "show_balloons": true,
-    "start_minimized": false
+    "start_minimized": false,
+    "double_press_captures_full_screen": true
 }

@@ -3,7 +3,7 @@ import wx
 
 class ImagePanel(wx.PyScrolledWindow):
     def __init__(self, parent):
-        wx.PyScrolledWindow.__init__(self, parent=parent)
+        wx.PyScrolledWindow.__init__(self, parent=parent, style=wx.BORDER)
         self.SetBackgroundStyle(wx.BG_STYLE_ERASE)
         self.frame = parent
         self.Bind(wx.EVT_ERASE_BACKGROUND, self.on_erase)
