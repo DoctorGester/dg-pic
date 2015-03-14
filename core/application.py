@@ -11,15 +11,18 @@ import ui
 
 
 class AppFrame(wx.Frame):
+    UPLOAD_URL = "http://dg-pic.tk/upload?version=1"
 
     def __init__(self, application):
         wx.Frame.__init__(self, None, -1, "dg-pic")
 
+        self.observers = {}
         self.config = config.Config("config.json")
 
         self.app = application
         self.capture_frames = []
         self.in_selection = False
+        self.uploading = False
         self.selection_start = (0, 0)
         self.selection_end = (0, 0)
         self.full_screen = None
@@ -34,11 +37,36 @@ class AppFrame(wx.Frame):
         self.Bind(wx.EVT_HOTKEY, self.on_capture_key, id=0)
         self.Bind(wx.EVT_CLOSE, self.on_close)
         self.Bind(wx.EVT_ICONIZE, self.on_iconify)
+        self.Bind(upload.EVT_UPLOAD_FINISHED, self.on_upload_finished)
+        self.Bind(upload.EVT_UPLOAD_PROGRESS, self.on_upload_progress)
+        self.SetMinSize((600, 400))
         self.Center()
         self.Show()
 
         if self.config.start_minimized:
             self.Iconize(True)
+
+    # For observer pattern
+    def __setattr__(self, key, new_value):
+        old_value = None
+
+        if key in self.__dict__:
+            old_value = self.__dict__[key]
+
+        self.__dict__[key] = new_value
+
+        if key in self.observers:
+            for observer in self.observers[key]:
+                observer(old_value, new_value)
+
+    def subscribe(self, key, observer):
+        if key not in self.observers:
+            observer_list = []
+            self.observers[key] = observer_list
+        else:
+            observer_list = self.observers[key]
+
+        observer_list.append(observer)
 
     def get_capture_key(self):
         try:
@@ -73,22 +101,13 @@ class AppFrame(wx.Frame):
         if self.config.show_app_after_capture:
             self.show()
 
-    def upload_progress(self, size=None, progress=None):
-        print("{0} / {1}".format(progress, size))
+    def on_upload_progress(self, event):
+        print("{0} / {1}".format(event.uploaded, event.total))
 
-    def send(self):
-        image = self.screen_shot.ConvertToImage()
-        stream = io.BytesIO()
-        image.SaveStream(stream, wx.BITMAP_TYPE_PNG)
+    def on_upload_finished(self, event):
+        self.uploading = False
 
-        files = {
-            "image": ("captured.png", stream.getvalue())
-        }
-
-        if self.config.show_balloons:
-            self.tray_control.show_info("Upload has started")
-
-        response = upload.upload_file("http://dg-pic.tk/upload?version=1", files, self.upload_progress)
+        response = event.response
         parsed = json.loads(response.text)
 
         if parsed["success"] is False:
@@ -105,6 +124,24 @@ class AppFrame(wx.Frame):
                 if self.config.show_balloons:
                     self.tray_control.show_info("Uploaded to: " + url)
 
+    def send(self):
+        image = self.screen_shot.ConvertToImage()
+        stream = io.BytesIO()
+        image.SaveStream(stream, wx.BITMAP_TYPE_PNG)
+
+        files = {
+            "image": ("captured.png", stream.getvalue())
+        }
+
+        if self.config.show_balloons:
+            self.tray_control.show_info("Upload has started")
+
+        self.uploading = True
+        upload.upload_file(self, AppFrame.UPLOAD_URL, files)
+
+    def save(self, path):
+        self.screen_shot.ConvertToImage().SaveFile(path, wx.BITMAP_TYPE_PNG)
+
     def screen_shot_from_selection(self, selection):
         bitmap = wx.EmptyBitmap(selection.width, selection.height)
 
@@ -119,6 +156,10 @@ class AppFrame(wx.Frame):
         self.screen_shot = screen_shot
         self.ui.set_screen_shot(screen_shot)
         self.Refresh()
+
+        if self.config.resize_window_on_capture:
+            difference = (self.ui.image_panel.GetBestVirtualSize() - self.screen_shot.GetSize())
+            self.SetSize(self.GetSize() - difference)
 
         if self.config.upload_after_capture:
             wx.CallAfter(self.send)

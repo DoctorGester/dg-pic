@@ -25,14 +25,16 @@ class TrayIcon(wx.TaskBarIcon):
     def CreatePopupMenu(self):
         menu = wx.Menu()
         TrayIcon.create_menu_item(menu, "Show App", self.on_show_app)
-        TrayIcon.create_menu_item(menu, "Capture", self.on_capture)
+        TrayIcon.create_menu_item(menu, "Capture", self.on_capture, not self.app.uploading)
+        TrayIcon.create_menu_item(menu, "Upload", self.on_upload, not self.app.uploading)
         menu.AppendSeparator()
         TrayIcon.create_menu_item(menu, "Exit", self.on_exit)
         return menu
 
     @staticmethod
-    def create_menu_item(menu, label, func):
+    def create_menu_item(menu, label, func, enabled=True):
         item = wx.MenuItem(menu, -1, label)
+        item.Enable(enabled)
         menu.Bind(wx.EVT_MENU, func, id=item.GetId())
         menu.AppendItem(item)
         return item
@@ -42,6 +44,9 @@ class TrayIcon(wx.TaskBarIcon):
 
     def on_capture(self, event):
         self.app.on_capture_key(event)
+
+    def on_upload(self, event):
+        self.app.send()
 
     def on_exit(self, event):
         self.app.on_close(event)

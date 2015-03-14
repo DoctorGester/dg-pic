@@ -1,6 +1,13 @@
 import io
+import wx
 import requests
+import threading
 from requests.packages.urllib3.filepost import encode_multipart_formdata
+
+wxEVT_UPLOAD_FINISHED = wx.NewEventType()
+wxEVT_UPLOAD_PROGRESS = wx.NewEventType()
+EVT_UPLOAD_FINISHED = wx.PyEventBinder(wxEVT_UPLOAD_FINISHED, 1)
+EVT_UPLOAD_PROGRESS = wx.PyEventBinder(wxEVT_UPLOAD_PROGRESS, 1)
 
 
 class CancelledError(Exception):
@@ -15,8 +22,8 @@ class CancelledError(Exception):
 
 
 class BufferReader(io.BytesIO):
-    def __init__(self, buf=b'', callback=None):
-        self.callback = callback
+    def __init__(self, buf=b'', app=None):
+        self.app = app
         self.progress = 0
         self.len = len(buf)
         io.BytesIO.__init__(self, buf)
@@ -27,21 +34,46 @@ class BufferReader(io.BytesIO):
     def read(self, n=-1):
         chunk = io.BytesIO.read(self, n)
         self.progress += int(len(chunk))
-        if self.callback:
+        if self.app:
             try:
-                self.callback(size=self.len, progress=self.progress)
+                wx.PostEvent(self.app, UploadProgressEvent(self.len, self.progress))
             except:  # catches exception from the callback
                 raise CancelledError("The upload was cancelled.")
         return chunk
 
 
-def upload_file(url, files, callback):
+class UploadFinishedEvent(wx.PyCommandEvent):
+    def __init__(self, response):
+        wx.PyCommandEvent.__init__(self, wxEVT_UPLOAD_FINISHED, -1)
+        self.response = response
 
-    (data, content_type) = encode_multipart_formdata(files)
 
-    headers = {
-        "Content-Type": content_type
-    }
+class UploadProgressEvent(wx.PyCommandEvent):
+    def __init__(self, total, uploaded):
+        wx.PyCommandEvent.__init__(self, wxEVT_UPLOAD_PROGRESS, -1)
+        self.total = total
+        self.uploaded = uploaded
 
-    body = BufferReader(data, callback)
-    return requests.post(url, data=body, headers=headers)
+
+class UploadThread(threading.Thread):
+    def __init__(self, app, url, files):
+        threading.Thread.__init__(self)
+        self.app = app
+        self.url = url
+        self.files = files
+
+    def run(self):
+        (data, content_type) = encode_multipart_formdata(self.files)
+
+        headers = {
+            "Content-Type": content_type
+        }
+
+        body = BufferReader(data, self.app)
+        response = requests.post(self.url, data=body, headers=headers)
+        wx.PostEvent(self.app, UploadFinishedEvent(response))
+
+
+def upload_file(app, url, files):
+    thread = UploadThread(app, url, files)
+    thread.start()
