@@ -12,6 +12,8 @@ import ui
 
 class AppFrame(wx.Frame):
     UPLOAD_URL = "http://dg-pic.tk/upload?version=1"
+    BASIC_URL = "http://dg-pic.tk/{0}"
+    MINI_URL = "http://dg-pic.tk/{0}.mini"
 
     def __init__(self, application):
         wx.Frame.__init__(self, None, -1, "dg-pic")
@@ -101,6 +103,21 @@ class AppFrame(wx.Frame):
         if self.config.show_app_after_capture:
             self.show()
 
+    def send(self):
+        image = self.screen_shot.ConvertToImage()
+        stream = io.BytesIO()
+        image.SaveStream(stream, wx.BITMAP_TYPE_PNG)
+
+        files = {
+            "image": ("captured.png", stream.getvalue())
+        }
+
+        if self.config.show_balloons:
+            self.tray_control.show_info("Upload has started")
+
+        self.uploading = True
+        upload.upload_file(self, AppFrame.UPLOAD_URL, files)
+
     def on_upload_progress(self, event):
         print("{0} / {1}".format(event.uploaded, event.total))
 
@@ -116,28 +133,23 @@ class AppFrame(wx.Frame):
 
             print parsed["message"]
         else:
-            url = AppFrame.get_image_url(response)
+            self.last_uploaded_url = parsed["answer"]["url"]
+            full_url = AppFrame.BASIC_URL.format(self.last_uploaded_url)
 
             if self.config.put_url_into_clipboard:
-                clipboard.set_data(url)
+                clipboard.set_data(full_url)
 
                 if self.config.show_balloons:
-                    self.tray_control.show_info("Uploaded to: " + url)
+                    self.tray_control.show_info("Uploaded to: " + full_url)
 
-    def send(self):
-        image = self.screen_shot.ConvertToImage()
-        stream = io.BytesIO()
-        image.SaveStream(stream, wx.BITMAP_TYPE_PNG)
+            if self.config.store_local_history:
+                history = self.config.history
 
-        files = {
-            "image": ("captured.png", stream.getvalue())
-        }
+                if not history:
+                    history = []
 
-        if self.config.show_balloons:
-            self.tray_control.show_info("Upload has started")
-
-        self.uploading = True
-        upload.upload_file(self, AppFrame.UPLOAD_URL, files)
+                history.append(self.last_uploaded_url)
+                self.config.history = history
 
     def save(self, path):
         self.screen_shot.ConvertToImage().SaveFile(path, wx.BITMAP_TYPE_PNG)
@@ -242,11 +254,6 @@ class AppFrame(wx.Frame):
         else:
             self.Destroy()
             app.Exit()
-
-    @staticmethod
-    def get_image_url(response):
-        url = json.loads(response.text)["answer"]["url"]
-        return "http://dg-pic.tk/" + url
 
     @staticmethod
     def get_full_screen():

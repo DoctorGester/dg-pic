@@ -1,11 +1,12 @@
 {
-    "capture_shortcut": "alt-shift-s",
-    "minimize_on_close": true,
-    "put_url_into_clipboard": true,
-    "upload_after_capture": false,
-    "show_app_after_capture": true,
-    "show_balloons": true,
-    "start_minimized": false,
+    "capture_shortcut": "alt-shift-s", 
     "double_press_captures_full_screen": true,
-    "resize_window_on_capture": false
+    "minimize_on_close": true, 
+    "put_url_into_clipboard": true, 
+    "resize_window_on_capture": false, 
+    "show_app_after_capture": true, 
+    "show_balloons": true, 
+    "start_minimized": false, 
+    "store_local_history": true, 
+    "upload_after_capture": false
 }

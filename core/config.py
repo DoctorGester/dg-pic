@@ -18,7 +18,10 @@ class Config:
         if self.modify_time != os.path.getmtime(self.file_name):
             self.load_file()
 
-        return self.data[item]
+        if item in self.data:
+            return self.data[item]
+
+        return None
 
     def __setattr__(self, key, value):
         if key in special_keys:
