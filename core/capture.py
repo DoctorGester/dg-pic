@@ -2,11 +2,11 @@ import wx
 
 
 class CaptureFrame(wx.Frame):
-    def __init__(self, parent, display, screen_dc):
+    def __init__(self, parent, display, screen_bitmap):
         wx.Frame.__init__(self, parent, -1, "capture", style=wx.FRAME_NO_TASKBAR | wx.STAY_ON_TOP)
         self.parent = parent
         self.display = display
-        self.screen_bitmap = screen_dc
+        self.screen_bitmap = screen_bitmap
         self.image, self.original = self.create_background()
         self.should_redraw = False
 
@@ -34,10 +34,11 @@ class CaptureFrame(wx.Frame):
         rect = self.display.GetGeometry()
         w, h = rect.GetSize()
 
+        dc_from = wx.MemoryDC(self.screen_bitmap)
         bitmap = wx.EmptyBitmap(w, h)
         original = wx.EmptyBitmap(w, h)
 
-        args = (0, 0, w, h, wx.MemoryDC(self.screen_bitmap), rect.x, rect.y)
+        args = (0, 0, w, h, dc_from, rect.x, rect.y)
 
         memory = wx.MemoryDC()
         memory.SelectObject(bitmap)

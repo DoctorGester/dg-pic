@@ -33,10 +33,11 @@ class AppFrame(wx.Frame):
         self.tray_control = traycontrol.TrayIcon(self)
         self.ui = ui.UI(self)
 
-        mod, key = self.get_capture_key()
+        self.register_global_key(self.config.capture_shortcut, "alt-shift-s", 0, self.on_capture_key)
 
-        print self.RegisterHotKey(0, mod, key)
-        self.Bind(wx.EVT_HOTKEY, self.on_capture_key, id=0)
+        if self.config.instant_screen_shortcut is not None:
+            self.register_global_key(self.config.instant_screen_shortcut, "control-shift-d", 1, self.on_full_screen_key)
+
         self.Bind(wx.EVT_CLOSE, self.on_close)
         self.Bind(wx.EVT_ICONIZE, self.on_iconify)
         self.Bind(upload.EVT_UPLOAD_FINISHED, self.on_upload_finished)
@@ -70,9 +71,13 @@ class AppFrame(wx.Frame):
 
         observer_list.append(observer)
 
-    def get_capture_key(self):
+    def register_global_key(self, key, default, bind_id, callback):
+        print self.RegisterHotKey(bind_id, *self.parse_key(key, default))
+        self.Bind(wx.EVT_HOTKEY, callback, id=bind_id)
+
+    def parse_key(self, key, default):
         try:
-            config_string = str(self.config.capture_shortcut.upper())
+            config_string = str(key.upper())
             words = str.split(config_string, "-")
             splitter = len(words) - 1
             mods = words[:splitter]
@@ -90,9 +95,7 @@ class AppFrame(wx.Frame):
 
             return final_mod, final_key
         except StandardError:
-            self.config.capture_shortcut = "alt-shift-s"
-
-            return self.get_capture_key()
+            return self.parse_key(default, default)
 
     def close_capture_frames(self):
         for frame in self.capture_frames:
@@ -227,9 +230,8 @@ class AppFrame(wx.Frame):
                 frame.should_redraw = True
 
     def on_capture_key(self, evt):
-        self.full_screen = self.get_full_screen()
-
         if not self.in_capture():
+            self.full_screen = self.get_full_screen()
             amount = range(wx.Display.GetCount())
             self.capture_frames = [capture.CaptureFrame(self, wx.Display(i), self.full_screen) for i in amount]
         else:
@@ -237,6 +239,11 @@ class AppFrame(wx.Frame):
                 self.set_screen_shot(self.full_screen)
 
             self.close_capture_frames()
+
+    def on_full_screen_key(self, evt):
+        if not self.in_capture():
+            self.full_screen = self.get_full_screen()
+            self.set_screen_shot(self.full_screen)
 
     def on_iconify(self, event):
         if self.IsIconized() and not self.config.minimize_on_close:  # This is dumb, but absolutely needed

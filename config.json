@@ -1,5 +1,6 @@
 {
-    "capture_shortcut": "alt-shift-s", 
+    "capture_shortcut": "alt-shift-s",
+    "instant_screen_shortcut": "control-shift-d",
     "double_press_captures_full_screen": true,
     "minimize_on_close": true, 
     "put_url_into_clipboard": true, 
@@ -7,6 +8,6 @@
     "show_app_after_capture": true, 
     "show_balloons": true, 
     "start_minimized": false, 
-    "store_local_history": true, 
+    "store_local_history": false,
     "upload_after_capture": false
 }
