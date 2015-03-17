@@ -127,8 +127,7 @@ class AppFrame(wx.Frame):
     def on_upload_finished(self, event):
         self.uploading = False
 
-        response = event.response
-        parsed = json.loads(response.text)
+        parsed = json.loads(event.text())
 
         if parsed["success"] is False:
             if self.config.show_balloons:

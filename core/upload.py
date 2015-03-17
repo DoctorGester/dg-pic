@@ -1,5 +1,6 @@
 import io
 import wx
+import json
 import requests
 import threading
 from requests.packages.urllib3.filepost import encode_multipart_formdata
@@ -47,6 +48,12 @@ class UploadFinishedEvent(wx.PyCommandEvent):
         wx.PyCommandEvent.__init__(self, wxEVT_UPLOAD_FINISHED, -1)
         self.response = response
 
+    def text(self):
+        if isinstance(self.response, requests.RequestException):
+            return json.dumps({"success": False, "message": str(self.response)})
+
+        return self.response.text
+
 
 class UploadProgressEvent(wx.PyCommandEvent):
     def __init__(self, total, uploaded):
@@ -70,8 +77,12 @@ class UploadThread(threading.Thread):
         }
 
         body = BufferReader(data, self.app)
-        response = requests.post(self.url, data=body, headers=headers)
-        wx.PostEvent(self.app, UploadFinishedEvent(response))
+
+        try:
+            response = requests.post(self.url, data=body, headers=headers)
+            wx.PostEvent(self.app, UploadFinishedEvent(response))
+        except requests.RequestException, err:
+            wx.PostEvent(self.app, UploadFinishedEvent(err))
 
 
 def upload_file(app, url, files):
