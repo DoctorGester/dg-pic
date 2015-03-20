@@ -18,6 +18,8 @@ class AppFrame(wx.Frame):
     def __init__(self, application):
         wx.Frame.__init__(self, None, -1, "dg-pic")
 
+        self.SetIcon(wx.Icon("icon.ico", wx.BITMAP_TYPE_ICO))
+
         self.observers = {}
         self.config = config.Config("config.json")
 
