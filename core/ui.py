@@ -11,12 +11,15 @@ class UI:
         self.toolbar = None
         self.capture_tool = None
         self.upload_tool = None
+        self.color_tool = None
         self.edit_tool = None
         self.save_tool = None
         self.help_tool = None
         self.help_menu = None
 
-        self.image_panel = imagepanel.ImagePanel(self.app)
+        self.current_color = wx.Colour(255, 0, 0)
+
+        self.image_panel = imagepanel.ImagePanel(self)
         self.create_toolbar()
         self.fill_main_toolbar()
 
@@ -35,14 +38,12 @@ class UI:
 
         self.toolbar.ClearTools()
 
-        self.capture_tool = self.add_tool("Capture", icons.PHOTO, self.app.on_capture_key, True)
+        self.capture_tool = self.add_tool("Capture", icons.PHOTO, self.app.on_capture_key)
         self.save_tool = self.add_tool("Save", icons.SAVE, self.on_save, enabled)
         self.edit_tool = self.add_tool("Edit", icons.PENCIL, self.on_edit, enabled)
         self.upload_tool = self.add_tool("Upload", icons.UPLOAD, self.on_upload, enabled)
-        self.add_tool("Settings", icons.SETTINGS, self.on_settings, True)
-        self.help_tool = self.add_tool("Help", icons.INFO, self.on_help, True)
-
-        self.create_help_menu()
+        self.add_tool("Settings", icons.SETTINGS, self.on_settings)
+        self.help_tool = self.add_tool("Help", icons.INFO, self.on_help)
 
         self.toolbar.Realize()
 
@@ -50,15 +51,41 @@ class UI:
         self.toolbar.ClearTools()
 
         self.add_back_tool()
-        self.add_tool("Color", icons.RECTANGLE_FILLED, self.on_select_color, True)
-        self.add_tool("Pencil", icons.PENCIL, self.on_back, True)
-        self.add_tool("Brush", icons.BRUSH, self.on_back, True)
-        self.add_tool("Shapes", icons.RECTANGLE, self.on_back, True)
-        self.add_tool("Eraser", icons.CANCEL, self.on_back, True)
+        self.color_tool = self.add_tool("Color", icons.RECTANGLE_FILLED, self.on_select_color)
+        self.add_tool("Pencil", icons.PENCIL, self.on_back)
+        self.add_tool("Brush", icons.BRUSH, self.on_back)
+        self.add_tool("Fill", icons.RECTANGLE_FILLED, self.on_back)
+        self.add_tool("Shapes", icons.RECTANGLE, self.on_shapes)
+        self.add_tool("Text", icons.TEXT, self.on_back)
+        self.add_tool("Eraser", icons.CANCEL, self.on_back)
 
         self.toolbar.Realize()
 
-    def add_tool(self, label, icon, callback, enabled=False):
+        self.update_color_tool()
+
+    def fill_help_toolbar(self):
+        self.toolbar.ClearTools()
+
+        self.add_back_tool()
+        self.add_tool("Site", icons.INFO, self.on_back)
+        self.add_tool("Feedback", icons.INFO, self.on_back)
+        self.add_tool("Updates", icons.INFO, self.on_back)
+        self.add_tool("About", icons.INFO, self.on_back)
+
+        self.toolbar.Realize()
+
+    def fill_shapes_toolbar(self):
+        self.toolbar.ClearTools()
+
+        self.add_back_tool(self.on_edit)
+        self.add_tool("Line", icons.RECTANGLE, self.on_back)
+        self.add_tool("Curve", icons.RECTANGLE, self.on_back)
+        self.add_tool("Circle", icons.RECTANGLE, self.on_back)
+        self.add_tool("Rectangle", icons.RECTANGLE, self.on_back)
+
+        self.toolbar.Realize()
+
+    def add_tool(self, label, icon, callback, enabled=True):
         tool = self.toolbar.AddLabelTool(wx.ID_ANY, label=label, bitmap=icons.icon(icon), shortHelp=label)
 
         self.toolbar.EnableTool(tool.GetId(), enabled)
@@ -72,10 +99,9 @@ class UI:
 
         self.add_tool("Back", icons.BACK, callback, True)
 
-    def create_help_menu(self):
-        self.help_menu = wx.Menu()
-
-        UI.create_menu_item(self.help_menu, "TEST", None)
+    def update_color_tool(self):
+        self.color_tool.SetNormalBitmap(icons.replace_color(icons.RECTANGLE_FILLED, self.current_color))
+        self.toolbar.Realize()
 
     @staticmethod
     def create_menu_item(menu, label, func):
@@ -112,26 +138,14 @@ class UI:
     def on_settings(self, event):
         pass
 
+    def on_shapes(self, event):
+        self.fill_shapes_toolbar()
+
     def on_edit(self, event):
         self.fill_edit_toolbar()
 
     def on_help(self, event):
-        bar_pos = self.toolbar.GetScreenPosition()-self.app.GetScreenPosition()
-
-        # This is the position of the tool along the tool bar (1st, 2nd, 3rd, etc...)
-        tool_index = self.toolbar.GetToolPos(event.GetId())
-
-        # Get the size of the tool
-        tool_size = self.toolbar.GetToolSize()
-
-        # This is the upper left corner of the clicked tool
-        upper_left_pos = (bar_pos[0]+tool_size[0]*tool_index, bar_pos[1])
-
-        # Menu position will be in the lower right corner
-        lower_right_pos = (bar_pos[0]+tool_size[0]*(tool_index+1), bar_pos[1]+tool_size[1])
-
-        #origin = self.help_tool.GetControl().GetPosition()
-        self.app.PopupMenuXY(self.help_menu, *upper_left_pos)
+        self.fill_help_toolbar()
 
     def on_select_color(self, event):
         data = wx.ColourData()
@@ -142,3 +156,8 @@ class UI:
 
         if color_dialog.ShowModal() == wx.ID_CANCEL:
             return
+
+        data = color_dialog.GetColourData()
+        self.current_color = data.GetColour()
+
+        self.update_color_tool()

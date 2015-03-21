@@ -1,5 +1,6 @@
 import wx
 from wx.lib.embeddedimage import PyEmbeddedImage
+from itertools import islice
 
 OPEN = PyEmbeddedImage("iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAADnklEQVRoQ9WaXU7iUBTHzymQ+kAEHggpfvBhRI2JMm5gcAU"
                        "6KxhnBTor0FnB6Ap0VqCzgnFWgGj8eDDaISSk8kCnhgSx7ZncZobw0Wqhhbn2Ee759//rPfdy7ikIb/zCN+4f+gDW1tYOAW"
@@ -352,11 +353,35 @@ CANCEL = PyEmbeddedImage("iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAGPklEQV
                          "ef5cN+m9FM2Wg0Gp4nI55t1qbhIbH/S6O70WjAl4XX6LbMERohP+VTA8YYbIOQKIisgHWtsY/Ia5rW1scekiRtQ2VEgXM"
                          "rceCgJWTV6K3pn9twjirNofXPbYxKi2QXmm0evn8BL2hOGNtuSmwAAAAASUVORK5CYII=")
 
+__cache = {}
+
 
 def icon(var):
     return wx.BitmapFromImage(var.GetImage().Scale(24, 24))
 
 
-def replace_color(var):
-    bitmap = icon(var)
-    pass
+def chunks(l, n):
+    n = max(1, n)
+    return [islice(l, i, i + n) for i in xrange(0, len(l), n)]
+
+
+def replace_color(var, to_color):
+    key = to_color.GetRGB()
+    if key in __cache:
+        return __cache[key]
+
+    image = var.GetImage()
+
+    for x in xrange(image.Width):
+        for y in xrange(image.Height):
+            colour = wx.Colour(image.GetRed(x, y), image.GetGreen(x, y), image.GetBlue(x, y), image.GetAlpha(x, y))
+
+            if colour.GetRGB() is not 0:
+                r = max(to_color.Red() - colour.Red(), 0)
+                g = max(to_color.Green() - colour.Green(), 0)
+                b = max(to_color.Blue() - colour.Blue(), 0)
+
+                image.SetRGB(x, y, r, g, b)
+
+    __cache[key] = wx.BitmapFromImage(image.Scale(24, 24))
+    return replace_color(var, to_color)
