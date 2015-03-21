@@ -366,7 +366,7 @@ def chunks(l, n):
 
 
 def replace_color(var, to_color):
-    key = to_color.GetRGB()
+    key = (var, to_color.GetRGB())
     if key in __cache:
         return __cache[key]
 

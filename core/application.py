@@ -3,6 +3,7 @@ import win32con
 import io
 import capture
 import traycontrol
+import webbrowser
 import config
 import json
 import clipboard
@@ -11,6 +12,7 @@ import ui
 
 
 class AppFrame(wx.Frame):
+    SITE_URL = "http://dg-pic.tk"
     UPLOAD_URL = "http://dg-pic.tk/upload?version=1"
     BASIC_URL = "http://dg-pic.tk/{0}"
     MINI_URL = "http://dg-pic.tk/{0}.mini"
@@ -109,6 +111,8 @@ class AppFrame(wx.Frame):
             self.show()
 
     def send(self):
+        self.ui.bottom_bar_show_progress()
+
         image = self.screen_shot.ConvertToImage()
         stream = io.BytesIO()
         image.SaveStream(stream, wx.BITMAP_TYPE_PNG)
@@ -124,7 +128,7 @@ class AppFrame(wx.Frame):
         upload.upload_file(self, AppFrame.UPLOAD_URL, files)
 
     def on_upload_progress(self, event):
-        print("{0} / {1}".format(event.uploaded, event.total))
+        self.ui.set_upload_progress(int(event.uploaded / event.total * 100))
 
     def on_upload_finished(self, event):
         self.uploading = False
@@ -135,10 +139,13 @@ class AppFrame(wx.Frame):
             if self.config.show_balloons:
                 self.tray_control.show_error("Upload error: " + parsed["message"])
 
+            self.ui.bottom_bar_show_text("Error: " + parsed["message"])
+
             print parsed["message"]
         else:
             self.last_uploaded_url = parsed["answer"]["url"]
             full_url = AppFrame.BASIC_URL.format(self.last_uploaded_url)
+            self.ui.bottom_bar_show_link(full_url)
 
             if self.config.put_url_into_clipboard:
                 clipboard.set_data(full_url)
@@ -154,6 +161,9 @@ class AppFrame(wx.Frame):
 
                 history.append(self.last_uploaded_url)
                 self.config.history = history
+
+    def go_to_image_link(self):
+        AppFrame.go_to_link(AppFrame.BASIC_URL.format(self.last_uploaded_url))
 
     def save(self, path):
         self.screen_shot.ConvertToImage().SaveFile(path, wx.BITMAP_TYPE_PNG)
@@ -262,6 +272,10 @@ class AppFrame(wx.Frame):
         else:
             self.Destroy()
             app.Exit()
+
+    @staticmethod
+    def go_to_link(link):
+        webbrowser.open_new_tab(link)
 
     @staticmethod
     def get_full_screen():

@@ -1,5 +1,6 @@
 import wx
 import icons
+import dialogs
 import imagepanel
 import wx.lib.agw.aui.auibar
 
@@ -15,19 +16,87 @@ class UI:
         self.edit_tool = None
         self.save_tool = None
         self.help_tool = None
-        self.help_menu = None
+
+        self.bottom_bar = None
+        self.bottom_bar_sizer = None
+        self.current_bottom_widget = None
+        self.screen_shot_text = None
+        self.screen_shot_link = None
+        self.screen_shot_progress = None
 
         self.current_color = wx.Colour(255, 0, 0)
 
-        self.image_panel = imagepanel.ImagePanel(self)
+        self.image_panel = None
+
+        self.create_layout()
         self.create_toolbar()
         self.fill_main_toolbar()
 
         self.app.subscribe("uploading", self.upload_event)
         self.app.subscribe("screen_shot", self.screen_shot_changed)
 
+    def create_layout(self):
+        top_level_panel = wx.Panel(self.app)
+
+        self.image_panel = imagepanel.ImagePanel(top_level_panel)
+        self.bottom_bar = wx.Panel(top_level_panel)
+
+        top_sizer = wx.BoxSizer(wx.VERTICAL)
+        top_sizer.Add(self.image_panel, 1, wx.EXPAND | wx.ALL, 0)
+        top_sizer.Add(self.bottom_bar, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.bottom_bar_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.create_bottom_bar(self.bottom_bar, self.bottom_bar_sizer)
+
+        self.bottom_bar.SetSizer(self.bottom_bar_sizer)
+
+        top_level_panel.SetSizer(top_sizer)
+        self.app.Layout()
+
+    def create_bottom_bar(self, bar, sizer):
+        self.screen_shot_text = wx.StaticText(bar, label="Press capture to get a shot")
+
+        self.screen_shot_link = wx.HyperlinkCtrl(bar)
+        self.screen_shot_link.Hide()
+
+        self.screen_shot_progress = wx.Gauge(bar, style=wx.GA_HORIZONTAL | wx.GA_SMOOTH)
+        self.screen_shot_progress.Hide()
+
+        self.current_bottom_widget = self.screen_shot_text
+
+        sizer.Add(self.screen_shot_text, 0, 5)
+        sizer.Add((0, 0), 1, wx.EXPAND)
+        sizer.Add(wx.Button(bar, label="Sign In"), 0, 5)
+        sizer.Add(wx.Button(bar, label="Sign Up"))
+
+        self.screen_shot_link.Bind(wx.EVT_HYPERLINK, self.on_link_clicked)
+
+    def try_replace_bottom_widget(self, new):
+        if self.current_bottom_widget is not new:
+            self.current_bottom_widget.Hide()
+            self.bottom_bar_sizer.Replace(self.current_bottom_widget, new)
+            self.current_bottom_widget = new
+            self.current_bottom_widget.Show()
+            self.bottom_bar.Layout()
+
+    def set_upload_progress(self, percent):
+        self.screen_shot_progress.SetValue(percent)
+
+    def bottom_bar_show_link(self, url):
+        self.screen_shot_link.SetLabel(url)
+        self.try_replace_bottom_widget(self.screen_shot_link)
+
+    def bottom_bar_show_progress(self):
+        self.try_replace_bottom_widget(self.screen_shot_progress)
+
+    def bottom_bar_show_text(self, text):
+        self.screen_shot_text.SetLabelText(text)
+        self.try_replace_bottom_widget(self.screen_shot_text)
+
     def set_screen_shot(self, image):
         self.image_panel.set_bitmap(image)
+        self.bottom_bar_show_text("Click upload to send your image")
+        self.screen_shot_progress.SetValue(0)
 
     def create_toolbar(self):
         self.toolbar = self.app.CreateToolBar(wx.TB_HORZ_TEXT | wx.TB_HORZ_LAYOUT | wx.BORDER)
@@ -42,6 +111,7 @@ class UI:
         self.save_tool = self.add_tool("Save", icons.SAVE, self.on_save, enabled)
         self.edit_tool = self.add_tool("Edit", icons.PENCIL, self.on_edit, enabled)
         self.upload_tool = self.add_tool("Upload", icons.UPLOAD, self.on_upload, enabled)
+        self.add_tool("Gallery", icons.LIST, self.on_gallery)
         self.add_tool("Settings", icons.SETTINGS, self.on_settings)
         self.help_tool = self.add_tool("Help", icons.INFO, self.on_help)
 
@@ -67,10 +137,10 @@ class UI:
         self.toolbar.ClearTools()
 
         self.add_back_tool()
-        self.add_tool("Site", icons.INFO, self.on_back)
+        self.add_tool("Site", icons.INFO, self.on_site_link)
         self.add_tool("Feedback", icons.INFO, self.on_back)
         self.add_tool("Updates", icons.INFO, self.on_back)
-        self.add_tool("About", icons.INFO, self.on_back)
+        self.add_tool("About", icons.INFO, self.on_about)
 
         self.toolbar.Realize()
 
@@ -85,8 +155,23 @@ class UI:
 
         self.toolbar.Realize()
 
+    def fill_gallery_toolbar(self):
+        self.toolbar.ClearTools()
+
+        self.add_back_tool(self.on_back)
+        self.add_tool("Local", icons.RECTANGLE, self.on_back)
+        self.add_tool("Online", icons.RECTANGLE, self.on_back)
+
+        self.toolbar.Realize()
+
     def add_tool(self, label, icon, callback, enabled=True):
-        tool = self.toolbar.AddLabelTool(wx.ID_ANY, label=label, bitmap=icons.icon(icon), shortHelp=label)
+        bitmap = icons.icon(icon)
+
+        # Debug
+        if icon is not icons.BACK and callback == self.on_back:
+            bitmap = icons.replace_color(icon, wx.Colour(190, 0, 0))
+
+        tool = self.toolbar.AddLabelTool(wx.ID_ANY, label=label, bitmap=bitmap, shortHelp=label)
 
         self.toolbar.EnableTool(tool.GetId(), enabled)
         self.app.Bind(wx.EVT_MENU, callback, tool)
@@ -147,6 +232,15 @@ class UI:
     def on_help(self, event):
         self.fill_help_toolbar()
 
+    def on_gallery(self, event):
+        self.fill_gallery_toolbar()
+
+    def on_site_link(self, event):
+        self.app.go_to_link(self.app.SITE_URL)
+
+    def on_about(self, event):
+        dialogs.AboutDialog(self.app)
+
     def on_select_color(self, event):
         data = wx.ColourData()
         data.SetColour(wx.Colour(255, 0, 0))
@@ -161,3 +255,6 @@ class UI:
         self.current_color = data.GetColour()
 
         self.update_color_tool()
+
+    def on_link_clicked(self, event):
+        self.app.go_to_image_link()
