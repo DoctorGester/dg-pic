@@ -110,7 +110,7 @@ class CaptureFrame(wx.Frame):
         dc = self.mdc
         dc.Clear()
 
-        if self.image is not None:
+        if self.image:
             dc.DrawBitmap(self.image, 0, 0)
             dc.SetPen(wx.Pen(wx.BLACK, 2))
 

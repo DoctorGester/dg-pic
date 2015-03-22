@@ -9,5 +9,6 @@
     "show_balloons": true, 
     "start_minimized": false, 
     "store_local_history": false,
+    "store_images_locally": true,
     "upload_after_capture": false
 }

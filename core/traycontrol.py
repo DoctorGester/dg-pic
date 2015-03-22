@@ -23,7 +23,7 @@ class TrayIcon(wx.TaskBarIcon):
 
     # override
     def CreatePopupMenu(self):
-        enabled = not self.app.uploading and self.app.screen_shot is not None
+        enabled = not self.app.uploading and self.app.screen_shot
         menu = wx.Menu()
         TrayIcon.create_menu_item(menu, "Show App", self.on_show_app)
         TrayIcon.create_menu_item(menu, "Capture", self.on_capture, enabled)

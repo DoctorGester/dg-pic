@@ -7,6 +7,7 @@ import webbrowser
 import config
 import json
 import clipboard
+import storage
 import upload
 import ui
 
@@ -131,8 +132,6 @@ class AppFrame(wx.Frame):
         self.ui.set_upload_progress(int(event.uploaded / event.total * 100))
 
     def on_upload_finished(self, event):
-        self.uploading = False
-
         parsed = json.loads(event.text())
 
         if parsed["success"] is False:
@@ -146,6 +145,10 @@ class AppFrame(wx.Frame):
             self.last_uploaded_url = parsed["answer"]["url"]
             full_url = AppFrame.BASIC_URL.format(self.last_uploaded_url)
             self.ui.bottom_bar_show_link(full_url)
+
+            if self.config.store_images_locally:
+                storage.store_image(self.last_uploaded_url, self.screen_shot)
+                storage.store_thumbnail(self.last_uploaded_url)
 
             if self.config.put_url_into_clipboard:
                 clipboard.set_data(full_url)
@@ -161,6 +164,8 @@ class AppFrame(wx.Frame):
 
                 history.append(self.last_uploaded_url)
                 self.config.history = history
+
+        self.uploading = False
 
     def go_to_image_link(self):
         AppFrame.go_to_link(AppFrame.BASIC_URL.format(self.last_uploaded_url))
@@ -179,6 +184,9 @@ class AppFrame(wx.Frame):
         return bitmap
 
     def set_screen_shot(self, screen_shot):
+        if self.screen_shot:
+            self.screen_shot.Destroy()
+
         self.screen_shot = screen_shot
         self.ui.set_screen_shot(screen_shot)
         self.Refresh()

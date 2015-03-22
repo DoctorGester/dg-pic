@@ -2,7 +2,6 @@ import wx
 import icons
 import dialogs
 import imagepanel
-import wx.lib.agw.aui.auibar
 
 
 class UI:
