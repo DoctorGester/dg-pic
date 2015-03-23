@@ -37,7 +37,7 @@ class UI:
     def create_layout(self):
         top_level_panel = wx.Panel(self.app)
 
-        self.image_panel = imagepanel.ImagePanel(top_level_panel)
+        self.image_panel = imagepanel.ImagePanel(top_level_panel, self)
         self.bottom_bar = wx.Panel(top_level_panel)
 
         top_sizer = wx.BoxSizer(wx.VERTICAL)
