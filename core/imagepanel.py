@@ -64,7 +64,7 @@ class ImagePanel(wx.PyScrolledWindow):
         self.drawing_layer = wx.EmptyBitmapRGBA(w, h, alpha=0)
         self.create_tool_layer()
 
-        self.set_tool(tools.RectangleTool())
+        self.set_tool(tools.LineTool())
 
     def on_mouse(self, evt):
         if self.current_tool and self.tool_layer:

@@ -47,7 +47,7 @@ class PencilTool(CanvasTool):
         return False
 
 
-class RectangleTool(CanvasTool):
+class PrimitiveTool(CanvasTool):
     def __init__(self):
         CanvasTool.__init__(self)
         self.start_point = None
@@ -63,6 +63,9 @@ class RectangleTool(CanvasTool):
 
         return top_left, bottom_right
 
+    def draw(self, panel, gc, top_left, bottom_right):
+        pass
+
     def on_mouse(self, panel, gc, event):
         if event.ButtonDown(wx.MOUSE_BTN_LEFT):
             self.start_point = (event.X, event.Y)
@@ -74,7 +77,45 @@ class RectangleTool(CanvasTool):
 
             self.clear(gc, panel.get_canvas_size())
             gc.SetPen(wx.Pen(panel.ui.current_color))
-            gc.DrawRectangle(top_left[0], top_left[1], bottom_right[0] - top_left[0], bottom_right[1] - top_left[1])
+            self.draw(panel, gc, top_left, bottom_right)
+
+        if event.ButtonUp(wx.MOUSE_BTN_LEFT):
+            return True
+
+        return False
+
+
+class RectangleTool(PrimitiveTool):
+    def __init__(self):
+        PrimitiveTool.__init__(self)
+
+    def draw(self, panel, gc, top_left, bottom_right):
+        gc.DrawRectangle(top_left[0], top_left[1], bottom_right[0] - top_left[0], bottom_right[1] - top_left[1])
+
+
+class EllipsisTool(PrimitiveTool):
+    def __init__(self):
+        PrimitiveTool.__init__(self)
+
+    def draw(self, panel, gc, top_left, bottom_right):
+        gc.DrawEllipse(top_left[0], top_left[1], bottom_right[0] - top_left[0], bottom_right[1] - top_left[1])
+
+
+class LineTool(CanvasTool):
+    def __init__(self):
+        CanvasTool.__init__(self)
+        self.start_point = None
+
+    def on_mouse(self, panel, gc, event):
+        if event.ButtonDown(wx.MOUSE_BTN_LEFT):
+            self.start_point = (event.X, event.Y)
+
+        if event.Dragging():
+            point_to = (event.X, event.Y)
+
+            self.clear(gc, panel.get_canvas_size())
+            gc.SetPen(wx.Pen(panel.ui.current_color))
+            gc.DrawLines((self.start_point, point_to))
 
         if event.ButtonUp(wx.MOUSE_BTN_LEFT):
             return True

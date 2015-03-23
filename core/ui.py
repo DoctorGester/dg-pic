@@ -148,8 +148,7 @@ class UI:
 
         self.add_back_tool(self.on_edit)
         self.add_tool("Line", icons.RECTANGLE, self.on_back)
-        self.add_tool("Curve", icons.RECTANGLE, self.on_back)
-        self.add_tool("Circle", icons.RECTANGLE, self.on_back)
+        self.add_tool("Ellipsis", icons.RECTANGLE, self.on_back)
         self.add_tool("Rectangle", icons.RECTANGLE, self.on_back)
 
         self.toolbar.Realize()
