@@ -18,6 +18,22 @@ class ImagePanel(wx.PyScrolledWindow):
     def get_canvas_size(self):
         return self.drawing_layer.GetWidth(), self.drawing_layer.GetHeight()
 
+    def get_combined_bitmap(self):
+        result = wx.EmptyBitmap(self.bitmap.GetWidth(), self.bitmap.GetHeight())
+
+        dc = wx.MemoryDC(result)
+
+        dc.DrawBitmap(self.bitmap, 0, 0)
+        dc.DrawBitmap(self.drawing_layer, 0, 0)
+
+        if self.tool_layer:
+                dc.DrawBitmap(self.tool_layer, 0, 0)
+
+        dc.SelectObject(wx.NullBitmap)
+        dc.Destroy()
+
+        return result
+
     def on_size(self, event):
         event.Skip()
         self.Refresh()

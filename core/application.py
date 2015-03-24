@@ -34,6 +34,7 @@ class AppFrame(wx.Frame):
         self.selection_end = (0, 0)
         self.full_screen = None
         self.screen_shot = None
+        self.combined_bitmap = None
         self.last_uploaded_url = None
         self.tray_control = traycontrol.TrayIcon(self)
         self.ui = ui.UI(self)
@@ -115,7 +116,11 @@ class AppFrame(wx.Frame):
         self.last_uploaded_url = None
         self.ui.bottom_bar_show_progress()
 
-        image = self.screen_shot.ConvertToImage()
+        if self.combined_bitmap:
+            self.combined_bitmap.Destroy()
+
+        self.combined_bitmap = self.ui.image_panel.get_combined_bitmap()
+        image = self.combined_bitmap.ConvertToImage()
         stream = io.BytesIO()
         image.SaveStream(stream, wx.BITMAP_TYPE_PNG)
 
@@ -148,7 +153,7 @@ class AppFrame(wx.Frame):
             self.ui.bottom_bar_show_link(full_url)
 
             if self.config.store_images_locally:
-                storage.store_image(self.last_uploaded_url, self.screen_shot)
+                storage.store_image(self.last_uploaded_url, self.combined_bitmap)
                 storage.store_thumbnail(self.last_uploaded_url)
 
             if self.config.put_url_into_clipboard:
@@ -175,7 +180,9 @@ class AppFrame(wx.Frame):
         AppFrame.go_to_link(AppFrame.BASIC_URL.format(self.last_uploaded_url))
 
     def save(self, path):
-        self.screen_shot.ConvertToImage().SaveFile(path, wx.BITMAP_TYPE_PNG)
+        combined = self.ui.image_panel.get_combined_bitmap()
+        combined.ConvertToImage().SaveFile(path, wx.BITMAP_TYPE_PNG)
+        combined.Destroy()
 
     def screen_shot_from_selection(self, selection):
         bitmap = wx.EmptyBitmap(selection.width, selection.height)
