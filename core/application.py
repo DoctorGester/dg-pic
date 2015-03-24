@@ -112,6 +112,7 @@ class AppFrame(wx.Frame):
             self.show()
 
     def send(self):
+        self.last_uploaded_url = None
         self.ui.bottom_bar_show_progress()
 
         image = self.screen_shot.ConvertToImage()
@@ -155,6 +156,9 @@ class AppFrame(wx.Frame):
 
                 if self.config.show_balloons:
                     self.tray_control.show_info("Uploaded to: " + full_url)
+
+            if self.config.open_in_browser_after_upload:
+                self.go_to_image_link()
 
             if self.config.store_local_history:
                 history = self.config.history

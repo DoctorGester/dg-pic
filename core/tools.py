@@ -21,22 +21,33 @@ class CanvasTool:
         gc.SetCompositionMode(prev)
 
 
+class WebImageTool(CanvasTool):
+    def __init__(self):
+        CanvasTool.__init__(self)
+
+    def on_mouse(self, panel, gc, event):
+        if event.LeftUp() and panel.ui.app.last_uploaded_url:
+            panel.ui.app.go_to_image_link()
+
+        return False
+
+
 class PencilTool(CanvasTool):
     def __init__(self):
         CanvasTool.__init__(self)
         self.prev_point = None
 
-    def on_mouse(self, ui, gc, event):
+    def on_mouse(self, panel, gc, event):
         if event.LeftDown():
             self.prev_point = (event.X, event.Y)
-            gc.SetPen(wx.Pen(ui.current_color))
+            gc.SetPen(wx.Pen(panel.ui.current_color))
             gc.DrawRectangle(event.X, event.Y, 1, 1)
 
         if event.Dragging() and event.LeftIsDown():
             point_from = self.prev_point
             point_to = (event.X, event.Y)
 
-            gc.SetPen(wx.Pen(ui.current_color))
+            gc.SetPen(wx.Pen(panel.ui.current_color))
             gc.DrawLines((point_from, point_to))
 
             self.prev_point = point_to
