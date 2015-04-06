@@ -23,10 +23,10 @@ class TrayIcon(wx.TaskBarIcon):
 
     # override
     def CreatePopupMenu(self):
-        enabled = not self.app.uploading and self.app.screen_shot
+        enabled = not self.app.uploading and self.app.screen_shot is not None
         menu = wx.Menu()
         TrayIcon.create_menu_item(menu, "Show App", self.on_show_app)
-        TrayIcon.create_menu_item(menu, "Capture", self.on_capture, enabled)
+        TrayIcon.create_menu_item(menu, "Capture", self.on_capture)
         TrayIcon.create_menu_item(menu, "Upload", self.on_upload, enabled)
         menu.AppendSeparator()
         TrayIcon.create_menu_item(menu, "Exit", self.on_exit)
@@ -50,4 +50,5 @@ class TrayIcon(wx.TaskBarIcon):
         self.app.send()
 
     def on_exit(self, event):
-        self.app.on_close(event)
+        self.app.Destroy()
+        self.app.app.Exit()
