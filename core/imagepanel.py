@@ -27,7 +27,7 @@ class ImagePanel(wx.PyScrolledWindow):
         dc.DrawBitmap(self.drawing_layer, 0, 0)
 
         if self.tool_layer:
-                dc.DrawBitmap(self.tool_layer, 0, 0)
+            dc.DrawBitmap(self.tool_layer, 0, 0)
 
         dc.SelectObject(wx.NullBitmap)
         dc.Destroy()

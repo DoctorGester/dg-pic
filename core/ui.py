@@ -25,6 +25,7 @@ class UI:
         self.screen_shot_progress = None
 
         self.current_color = wx.Colour(255, 0, 0)
+        self.brush_size = 4
 
         self.image_panel = None
 
@@ -123,13 +124,13 @@ class UI:
         self.toolbar.ClearTools()
 
         self.add_back_tool()
-        self.color_tool = self.add_tool("Color", icons.RECTANGLE_FILLED, self.on_select_color)
+        self.color_tool = self.add_tool("", icons.RECTANGLE_FILLED, self.on_select_color)
         self.add_draw_tool("Pencil", icons.PENCIL, tools.PencilTool())
         self.add_tool("Brush", icons.BRUSH, self.on_back)
         self.add_tool("Fill", icons.RECTANGLE_FILLED, self.on_back)
         self.add_tool("Shapes", icons.RECTANGLE, self.on_shapes)
         self.add_tool("Text", icons.TEXT, self.on_back)
-        self.add_tool("Eraser", icons.CANCEL, self.on_back)
+        self.add_draw_tool("Eraser", icons.CANCEL, tools.EraserTool())
 
         self.toolbar.Realize()
 
@@ -259,7 +260,7 @@ class UI:
 
     def on_select_color(self, event):
         data = wx.ColourData()
-        data.SetColour(wx.Colour(255, 0, 0))
+        data.SetColour(self.current_color)
         data.SetChooseFull(True)
 
         color_dialog = wx.ColourDialog(self.app, data)

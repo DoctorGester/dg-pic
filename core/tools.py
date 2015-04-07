@@ -9,12 +9,16 @@ class CanvasTool:
         return False
 
     @staticmethod
-    def clear(gc, size):
-        prev = gc.GetCompositionMode()
-
+    def enable_clear_mode(gc):
         # I don't know what 1 means, probably clear mode
         # I wasn't able to identify the proper constant
         gc.SetCompositionMode(1)
+
+    @staticmethod
+    def clear(gc, size):
+        prev = gc.GetCompositionMode()
+
+        CanvasTool.enable_clear_mode(gc)
         gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 0)))
         gc.DrawRectangle(0, 0, size[0], size[1])
 
@@ -32,24 +36,27 @@ class WebImageTool(CanvasTool):
         return False
 
 
-class PencilTool(CanvasTool):
+class DraggingTool(CanvasTool):
     def __init__(self):
         CanvasTool.__init__(self)
         self.prev_point = None
 
+    def draw_on_start(self, gc, panel, start_point):
+        pass
+
+    def draw(self, gc, panel, start_point, end_point):
+        pass
+
     def on_mouse(self, panel, gc, event):
         if event.LeftDown():
             self.prev_point = (event.X, event.Y)
-            gc.SetPen(wx.Pen(panel.ui.current_color))
-            gc.DrawRectangle(event.X, event.Y, 1, 1)
+            self.draw_on_start(gc, panel, self.prev_point)
 
         if event.Dragging() and event.LeftIsDown():
             point_from = self.prev_point
             point_to = (event.X, event.Y)
 
-            gc.SetPen(wx.Pen(panel.ui.current_color))
-            gc.DrawLines((point_from, point_to))
-
+            self.draw(gc, panel, point_from, point_to)
             self.prev_point = point_to
 
         if event.LeftUp():
@@ -87,13 +94,26 @@ class PrimitiveTool(CanvasTool):
             top_left, bottom_right = self.get_rect(point_to)
 
             self.clear(gc, panel.get_canvas_size())
-            gc.SetPen(wx.Pen(panel.ui.current_color))
+            gc.SetPen(wx.Pen(panel.ui.current_color, panel.ui.brush_size))
             self.draw(panel, gc, top_left, bottom_right)
 
         if event.LeftUp():
             return True
 
         return False
+
+
+class PencilTool(DraggingTool):
+    def __init__(self):
+        DraggingTool.__init__(self)
+
+    def draw_on_start(self, gc, panel, start_point):
+        gc.SetPen(wx.Pen(panel.ui.current_color))
+        gc.DrawRectangle(start_point[0], start_point[1], 1, 1)
+
+    def draw(self, gc, panel, start_point, end_point):
+        gc.SetPen(wx.Pen(panel.ui.current_color))
+        gc.DrawLines((start_point, end_point))
 
 
 class RectangleTool(PrimitiveTool):
@@ -125,10 +145,24 @@ class LineTool(CanvasTool):
             point_to = (event.X, event.Y)
 
             self.clear(gc, panel.get_canvas_size())
-            gc.SetPen(wx.Pen(panel.ui.current_color))
+            gc.SetPen(wx.Pen(panel.ui.current_color, panel.ui.brush_size))
             gc.DrawLines((self.start_point, point_to))
 
         if event.LeftUp():
             return True
 
         return False
+
+
+class EraserTool(DraggingTool):
+    def __init__(self):
+        CanvasTool.__init__(self)
+        self.prev_point = None
+
+    def draw_on_start(self, gc, panel, start_point):
+        gc.SetPen(wx.Pen(panel.ui.current_color, panel.ui.brush_size))
+        gc.DrawRectangle(start_point[0], start_point[1], 1, 1)
+
+    def draw(self, gc, panel, start_point, end_point):
+        gc.SetPen(wx.Pen(panel.ui.current_color, panel.ui.brush_size))
+        gc.DrawLines((start_point, end_point))
