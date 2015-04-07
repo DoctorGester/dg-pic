@@ -143,3 +143,30 @@ class SettingsDialog(wx.Dialog):
             return modifiers + key_name
 
 SettingsDialog.gen_key_map()
+
+
+class GalleryDialog(wx.Dialog):
+
+    def __init__(self, app, title, go_to_gallery_handler, content_provider):
+        super(GalleryDialog, self).__init__(parent=app, title=title)
+
+        self.app = app
+        self.go_to_gallery_handler = go_to_gallery_handler
+        self.content_provider = content_provider
+
+    def ShowModal(*args, **kwargs):
+        self = args[0]
+        super(GalleryDialog, self).ShowModal(args, kwargs)
+        self.content_provider.get_names(self.on_names_loaded)
+
+    def on_names_loaded(self, names):
+        pass
+
+
+class SimpleGalleryContentProvider:
+
+    def __init__(self, names):
+        self.names = names
+
+    def get_names(self, callback):
+        callback(self.names)
