@@ -1,16 +1,16 @@
 {
-    "capture_shortcut": "alt-shift-s",
-    "instant_screen_shortcut": "control-shift-d",
-    "double_press_captures_full_screen": true,
+    "capture_shortcut": "alt-shift-s", 
+    "double_press_captures_full_screen": true, 
+    "instant_screen_shortcut": "control-shift-d", 
     "minimize_on_close": true, 
+    "move_window_at_capture": true, 
+    "open_in_browser_after_upload": false, 
     "put_url_into_clipboard": true, 
-    "resize_window_on_capture": false,
+    "resize_window_on_capture": false, 
     "show_app_after_capture": true, 
     "show_balloons": true, 
     "start_minimized": false, 
-    "store_local_history": false,
-    "store_images_locally": true,
-    "upload_after_capture": false,
-    "open_in_browser_after_upload": false,
-    "move_window_at_capture": true
+    "store_images_locally": true, 
+    "store_local_history": false, 
+    "upload_after_capture": false
 }

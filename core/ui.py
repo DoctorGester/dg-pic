@@ -238,7 +238,8 @@ class UI:
         self.app.save(save_dialog.GetPath())
 
     def on_settings(self, event):
-        pass
+        dialog = dialogs.SettingsDialog(self.app)
+        dialog.ShowModal()
 
     def on_shapes(self, event):
         self.fill_shapes_toolbar()

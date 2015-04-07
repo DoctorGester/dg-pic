@@ -33,6 +33,12 @@ class Config:
         if not self.transaction:
             self.save_file()
 
+    def get(self, item):
+        return self.__getattr__(item)
+
+    def set(self, key, value):
+        self.__setattr__(key, value)
+
     def load_file(self):
         if not os.path.isfile(self.file_name):
             file_data = open(self.file_name, 'w+')
