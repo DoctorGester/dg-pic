@@ -4,12 +4,13 @@
     "double_press_captures_full_screen": true,
     "minimize_on_close": true, 
     "put_url_into_clipboard": true, 
-    "resize_window_on_capture": false, 
+    "resize_window_on_capture": false,
     "show_app_after_capture": true, 
     "show_balloons": true, 
     "start_minimized": false, 
     "store_local_history": false,
     "store_images_locally": true,
     "upload_after_capture": false,
-    "open_in_browser_after_upload": false
+    "open_in_browser_after_upload": false,
+    "move_window_at_capture": true
 }

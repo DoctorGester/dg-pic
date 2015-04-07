@@ -249,8 +249,10 @@ class AppFrame(wx.Frame):
 
             combined = AppFrame.combine_selections(selections)
             self.set_screen_shot(self.screen_shot_from_selection(combined))
-
             self.close_capture_frames()
+
+            if self.config.move_window_at_capture:
+                self.move_with_canvas_offset(combined.x, combined.y)
 
     def on_motion(self, display, event):
         if self.in_capture():
@@ -268,6 +270,9 @@ class AppFrame(wx.Frame):
             if self.config.double_press_captures_full_screen:
                 self.set_screen_shot(self.full_screen)
 
+                if self.config.move_window_at_capture:
+                    self.move_with_canvas_offset(0, 0)
+
             self.close_capture_frames()
 
     def on_full_screen_key(self, evt):
@@ -278,6 +283,11 @@ class AppFrame(wx.Frame):
     def on_iconify(self, event):
         if self.IsIconized() and not self.config.minimize_on_close:  # This is dumb, but absolutely needed
             self.Hide()
+
+    def move_with_canvas_offset(self, x, y):
+        difference = (self.ui.image_panel.GetScreenPosition() - self.GetScreenPosition())
+
+        self.MoveXY(max(0, x - difference.x), max(0, y - difference.y))
 
     def show(self):
         self.Show()
