@@ -39,10 +39,10 @@ class AppFrame(wx.Frame):
         self.tray_control = traycontrol.TrayIcon(self)
         self.ui = ui.UI(self)
 
-        self.register_global_key(self.config.capture_shortcut, "alt-shift-s", 0, self.on_capture_key)
+        self.register_capture_key(self.config.capture_shortcut)
 
         if self.config.instant_screen_shortcut is not None:
-            self.register_global_key(self.config.instant_screen_shortcut, "control-shift-d", 1, self.on_full_screen_key)
+            self.register_instant_screen_key(self.config.instant_screen_shortcut)
 
         self.Bind(wx.EVT_CLOSE, self.on_close)
         self.Bind(wx.EVT_ICONIZE, self.on_iconify)
@@ -77,7 +77,14 @@ class AppFrame(wx.Frame):
 
         observer_list.append(observer)
 
+    def register_capture_key(self, key):
+        self.register_global_key(key, "alt-shift-s", 0, self.on_capture_key)
+
+    def register_instant_screen_key(self, key):
+        self.register_global_key(key, "control-shift-d", 1, self.on_full_screen_key)
+
     def register_global_key(self, key, default, bind_id, callback):
+        self.UnregisterHotKey(bind_id)
         print self.RegisterHotKey(bind_id, *self.parse_key(key, default))
         self.Bind(wx.EVT_HOTKEY, callback, id=bind_id)
 
@@ -262,6 +269,9 @@ class AppFrame(wx.Frame):
                 frame.should_redraw = True
 
     def on_capture_key(self, evt):
+        if self.ui.are_settings_open():
+            return
+
         if not self.in_capture():
             self.full_screen = self.get_full_screen()
             amount = range(wx.Display.GetCount())
@@ -276,6 +286,9 @@ class AppFrame(wx.Frame):
             self.close_capture_frames()
 
     def on_full_screen_key(self, evt):
+        if self.ui.are_settings_open():
+            return
+
         if not self.in_capture():
             self.full_screen = self.get_full_screen()
             self.set_screen_shot(self.full_screen)

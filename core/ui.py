@@ -24,6 +24,8 @@ class UI:
         self.screen_shot_link = None
         self.screen_shot_progress = None
 
+        self.settings_dialog = None
+
         self.current_color = wx.Colour(255, 0, 0)
         self.brush_size = 4
 
@@ -35,6 +37,9 @@ class UI:
 
         self.app.subscribe("uploading", self.upload_event)
         self.app.subscribe("screen_shot", self.screen_shot_changed)
+
+    def are_settings_open(self):
+        return self.settings_dialog is not None and self.settings_dialog.IsShown()
 
     def create_layout(self):
         top_level_panel = wx.Panel(self.app)
@@ -238,8 +243,8 @@ class UI:
         self.app.save(save_dialog.GetPath())
 
     def on_settings(self, event):
-        dialog = dialogs.SettingsDialog(self.app)
-        dialog.ShowModal()
+        self.settings_dialog = dialogs.SettingsDialog(self.app)
+        self.settings_dialog.ShowModal()
 
     def on_shapes(self, event):
         self.fill_shapes_toolbar()
