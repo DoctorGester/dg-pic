@@ -50,6 +50,7 @@ class ImagePanel(wx.PyScrolledWindow):
             dc.DrawBitmap(self.drawing_layer, 0, 0)
 
             if self.tool_layer:
+                dc.SetLogicalFunction(wx.INVERT)
                 dc.DrawBitmap(self.tool_layer, 0, 0)
 
     def set_tool(self, tool):

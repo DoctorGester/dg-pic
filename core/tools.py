@@ -9,16 +9,10 @@ class CanvasTool:
         return False
 
     @staticmethod
-    def enable_clear_mode(gc):
-        # I don't know what 1 means, probably clear mode
-        # I wasn't able to identify the proper constant
-        gc.SetCompositionMode(1)
-
-    @staticmethod
     def clear(gc, size):
         prev = gc.GetCompositionMode()
 
-        CanvasTool.enable_clear_mode(gc)
+        gc.SetCompositionMode(wx.CLEAR)
         gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 0)))
         gc.DrawRectangle(0, 0, size[0], size[1])
 
@@ -160,9 +154,9 @@ class EraserTool(DraggingTool):
         self.prev_point = None
 
     def draw_on_start(self, gc, panel, start_point):
-        gc.SetPen(wx.Pen(panel.ui.current_color, panel.ui.brush_size))
-        gc.DrawRectangle(start_point[0], start_point[1], 1, 1)
+        pass
 
     def draw(self, gc, panel, start_point, end_point):
         gc.SetPen(wx.Pen(panel.ui.current_color, panel.ui.brush_size))
+        #gc.SetPen(wx.Pen(wx.Colour(255, 255, 255, wx.ALPHA_TRANSPARENT), panel.ui.brush_size))
         gc.DrawLines((start_point, end_point))

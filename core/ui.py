@@ -27,7 +27,7 @@ class UI:
         self.settings_dialog = None
 
         self.current_color = wx.Colour(255, 0, 0)
-        self.brush_size = 4
+        self.brush_size = 8
 
         self.image_panel = None
 
@@ -131,11 +131,11 @@ class UI:
         self.add_back_tool()
         self.color_tool = self.add_tool("", icons.RECTANGLE_FILLED, self.on_select_color)
         self.add_draw_tool("Pencil", icons.PENCIL, tools.PencilTool())
+        self.add_draw_tool("Eraser", icons.CANCEL, tools.EraserTool())
         self.add_tool("Brush", icons.BRUSH, self.on_back)
         self.add_tool("Fill", icons.RECTANGLE_FILLED, self.on_back)
         self.add_tool("Shapes", icons.RECTANGLE, self.on_shapes)
         self.add_tool("Text", icons.TEXT, self.on_back)
-        self.add_draw_tool("Eraser", icons.CANCEL, tools.EraserTool())
 
         self.toolbar.Realize()
 
