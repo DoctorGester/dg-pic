@@ -14,9 +14,6 @@ import ui
 
 class AppFrame(wx.Frame):
     SITE_URL = "http://dg-pic.tk"
-    UPLOAD_URL = "http://dg-pic.tk/upload?version=1"
-    BASIC_URL = "http://dg-pic.tk/{0}"
-    MINI_URL = "http://dg-pic.tk/{0}.mini"
 
     def __init__(self, application):
         wx.Frame.__init__(self, None, -1, "dg-pic")
@@ -139,7 +136,7 @@ class AppFrame(wx.Frame):
             self.tray_control.show_info("Upload has started")
 
         self.uploading = True
-        upload.upload_file(self, AppFrame.UPLOAD_URL, files)
+        upload.upload_file(self, self.config.upload_url, files)
 
     def on_upload_progress(self, event):
         self.ui.set_upload_progress(int(event.uploaded / event.total * 100))
@@ -156,12 +153,12 @@ class AppFrame(wx.Frame):
             print parsed["message"]
         else:
             self.last_uploaded_url = parsed["answer"]["url"]
-            full_url = AppFrame.BASIC_URL.format(self.last_uploaded_url)
+            full_url = self.config.basic_url.format(self.last_uploaded_url)
             self.ui.bottom_bar_show_link(full_url)
 
             if self.config.store_images_locally:
                 storage.store_image(self.last_uploaded_url, self.combined_bitmap)
-                storage.store_thumbnail(self.last_uploaded_url)
+                storage.store_thumbnail(self.config.mini_url, self.last_uploaded_url)
 
             if self.config.put_url_into_clipboard:
                 clipboard.set_data(full_url)
@@ -184,7 +181,7 @@ class AppFrame(wx.Frame):
         self.uploading = False
 
     def go_to_image_link(self):
-        AppFrame.go_to_link(AppFrame.BASIC_URL.format(self.last_uploaded_url))
+        AppFrame.go_to_link(self.config.basic_url.format(self.last_uploaded_url))
 
     def save(self, path):
         combined = self.ui.image_panel.get_combined_bitmap()
@@ -202,6 +199,12 @@ class AppFrame(wx.Frame):
         return bitmap
 
     def set_screen_shot(self, screen_shot):
+        w = screen_shot.GetWidth()
+        h = screen_shot.GetHeight()
+
+        if w == 0 and h == 0:
+            return
+
         if self.screen_shot:
             self.screen_shot.Destroy()
 

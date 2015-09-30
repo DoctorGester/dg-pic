@@ -16,8 +16,8 @@ if not os.path.exists(gallery_dir):
     os.makedirs(gallery_dir, 0755)
 
 
-def store_thumbnail(name):
-    full_url = application.AppFrame.MINI_URL.format(name)
+def store_thumbnail(mini_url, name):
+    full_url = mini_url.format(name)
 
     request = requests.get(full_url, stream=True)
 
