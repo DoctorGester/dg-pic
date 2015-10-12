@@ -86,6 +86,8 @@ class SettingsDialog(wx.Dialog):
         self.bind_bool_config_parameter("Open image in browser after uploading", "open_in_browser_after_upload")
         self.bind_bool_config_parameter("Move window after capture", "move_window_at_capture")
 
+        # self.bind_text_config_parameter("Save uploaded images to", "gallery_dir")
+
         h_box.Add(self.sizer, proportion=1, flag=wx.ALL | wx.EXPAND, border=15)
         self.panel.SetSizer(h_box)
 

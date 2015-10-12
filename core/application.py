@@ -157,7 +157,7 @@ class AppFrame(wx.Frame):
             self.ui.bottom_bar_show_link(full_url)
 
             if self.config.store_images_locally:
-                storage.store_image(self.last_uploaded_url, self.combined_bitmap)
+                storage.store_image(self.config, self.last_uploaded_url, self.combined_bitmap)
                 storage.store_thumbnail(self.config.mini_url, self.last_uploaded_url)
 
             if self.config.put_url_into_clipboard:

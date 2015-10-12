@@ -1,7 +1,9 @@
 {
-    "capture_shortcut": "alt-shift-s", 
+    "basic_url": "http://dg-lab.com/{0}", 
+    "capture_shortcut": "alt-shift-s",
     "double_press_captures_full_screen": true, 
     "instant_screen_shortcut": "control-shift-d", 
+    "mini_url": "http://dg-pic.tk/{0}.mini", 
     "minimize_on_close": true, 
     "move_window_at_capture": false, 
     "open_in_browser_after_upload": false, 
@@ -12,8 +14,6 @@
     "start_minimized": false, 
     "store_images_locally": true, 
     "store_local_history": false, 
-    "upload_after_capture": false,
-    "basic_url": "http://dg-lab.com/{0}",
-    "mini_url": "http://dg-pic.tk/{0}.mini",
+    "upload_after_capture": false, 
     "upload_url": "http://dg-pic.tk/upload?version=1"
 }
