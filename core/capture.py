@@ -26,7 +26,8 @@ class CaptureFrame(wx.Frame):
         self.SetCursor(wx.StockCursor(wx.CURSOR_CROSS))
         self.SetPosition(display.GetGeometry().GetTopLeft())
         self.ShowFullScreen(True, style=wx.FULLSCREEN_ALL)
-        self.SetFocus()
+
+        wx.CallLater(20, self.SetFocus)
 
         self.on_timer()
 
