@@ -100,6 +100,9 @@ class UI:
         self.try_replace_bottom_widget(self.screen_shot_text)
 
     def set_screen_shot(self, image):
+        if image.GetWidth() is 0 and image.GetHeight() is 0:
+            return
+
         self.image_panel.set_bitmap(image)
         self.bottom_bar_show_text("Click upload to send your image")
         self.screen_shot_progress.SetValue(0)

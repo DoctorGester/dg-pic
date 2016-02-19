@@ -142,7 +142,14 @@ class AppFrame(wx.Frame):
         self.ui.set_upload_progress(int(event.uploaded / event.total * 100))
 
     def on_upload_finished(self, event):
-        parsed = json.loads(event.text())
+        parsed = {
+            "success": False
+        }
+
+        try:
+            parsed = json.loads(event.text())
+        except ValueError, err:
+            parsed["message"] = str(err)
 
         if parsed["success"] is False:
             if self.config.show_balloons:
@@ -204,6 +211,8 @@ class AppFrame(wx.Frame):
 
         if w == 0 and h == 0:
             return
+
+        self.last_uploaded_url = None
 
         if self.screen_shot:
             self.screen_shot.Destroy()
