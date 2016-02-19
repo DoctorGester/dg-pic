@@ -8,11 +8,20 @@ class CanvasTool:
     def on_mouse(self, panel, gc, event):
         return False
 
+    def post_process(self, panel, source_dc, target_dc):
+        pass
+
+    def get_cursor(self):
+        return wx.StockCursor(self.get_stock_cursor_id())
+
+    def get_stock_cursor_id(self):
+        return wx.CURSOR_ARROW
+
     @staticmethod
     def clear(gc, size):
         prev = gc.GetCompositionMode()
 
-        gc.SetCompositionMode(wx.CLEAR)
+        gc.SetCompositionMode(wx.COMPOSITION_SOURCE)
         gc.SetBrush(wx.Brush(wx.Colour(255, 255, 255, 0)))
         gc.DrawRectangle(0, 0, size[0], size[1])
 
@@ -22,6 +31,9 @@ class CanvasTool:
 class WebImageTool(CanvasTool):
     def __init__(self):
         CanvasTool.__init__(self)
+
+    def get_stock_cursor_id(self):
+        return wx.CURSOR_HAND
 
     def on_mouse(self, panel, gc, event):
         if event.LeftUp() and panel.ui.app.last_uploaded_url:
@@ -35,11 +47,18 @@ class DraggingTool(CanvasTool):
         CanvasTool.__init__(self)
         self.prev_point = None
 
+    def get_stock_cursor_id(self):
+        return wx.CURSOR_BULLSEYE
+
     def draw_on_start(self, gc, panel, start_point):
         pass
 
     def draw(self, gc, panel, start_point, end_point):
         pass
+
+    def post_process(self, panel, source_dc, target_dc):
+        target_size = target_dc.Size
+        target_dc.Blit(0, 0, target_size[0], target_size[1], source_dc, 0, 0)
 
     def on_mouse(self, panel, gc, event):
         if event.LeftDown():
@@ -78,6 +97,10 @@ class PrimitiveTool(CanvasTool):
     def draw(self, panel, gc, top_left, bottom_right):
         pass
 
+    def post_process(self, panel, source_dc, target_dc):
+        target_size = target_dc.Size
+        target_dc.Blit(0, 0, target_size[0], target_size[1], source_dc, 0, 0)
+
     def on_mouse(self, panel, gc, event):
         if event.LeftDown():
             self.start_point = (event.X, event.Y)
@@ -100,6 +123,9 @@ class PrimitiveTool(CanvasTool):
 class PencilTool(DraggingTool):
     def __init__(self):
         DraggingTool.__init__(self)
+
+    def get_stock_cursor_id(self):
+        return wx.CURSOR_PENCIL
 
     def draw_on_start(self, gc, panel, start_point):
         gc.SetPen(wx.Pen(panel.ui.current_color))
@@ -131,6 +157,10 @@ class LineTool(CanvasTool):
         CanvasTool.__init__(self)
         self.start_point = None
 
+    def post_process(self, panel, source_dc, target_dc):
+        target_size = target_dc.Size
+        target_dc.Blit(0, 0, target_size[0], target_size[1], source_dc, 0, 0)
+
     def on_mouse(self, panel, gc, event):
         if event.LeftDown():
             self.start_point = (event.X, event.Y)
@@ -151,12 +181,28 @@ class LineTool(CanvasTool):
 class EraserTool(DraggingTool):
     def __init__(self):
         CanvasTool.__init__(self)
-        self.prev_point = None
+        self.start_point = None
+        self.points = []
 
     def draw_on_start(self, gc, panel, start_point):
-        pass
+        self.points.append(start_point)
 
     def draw(self, gc, panel, start_point, end_point):
-        gc.SetPen(wx.Pen(panel.ui.current_color, panel.ui.brush_size))
-        #gc.SetPen(wx.Pen(wx.Colour(255, 255, 255, wx.ALPHA_TRANSPARENT), panel.ui.brush_size))
+        self.points.append(end_point)
+
+        gc.SetPen(wx.Pen(wx.Colour(255, 255, 255), panel.ui.brush_size))
         gc.DrawLines((start_point, end_point))
+
+    def post_process(self, panel, source_dc, target_dc):
+        if len(self.points) > 0:
+            gc = wx.GraphicsContext.Create(target_dc)
+            gc.SetCompositionMode(wx.COMPOSITION_SOURCE)
+            gc.SetPen(wx.Pen(wx.Colour(255, 255, 255, 0), panel.ui.brush_size))
+
+            path = gc.CreatePath()
+            path.MoveToPoint(self.points[0])
+
+            for point in self.points:
+                path.AddLineToPoint(point)
+
+            gc.StrokePath(path)

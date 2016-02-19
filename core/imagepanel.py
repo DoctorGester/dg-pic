@@ -50,7 +50,6 @@ class ImagePanel(wx.PyScrolledWindow):
             dc.DrawBitmap(self.drawing_layer, 0, 0)
 
             if self.tool_layer:
-                dc.SetLogicalFunction(wx.INVERT)
                 dc.DrawBitmap(self.tool_layer, 0, 0)
 
     def set_tool(self, tool):
@@ -58,6 +57,12 @@ class ImagePanel(wx.PyScrolledWindow):
 
         if self.drawing_layer:
             self.create_tool_layer()
+
+        self.update_cursor()
+
+    def update_cursor(self):
+        if self.current_tool:
+            self.SetCursor(self.current_tool.get_cursor())
 
     def create_tool_layer(self):
         if self.tool_layer:
@@ -96,7 +101,13 @@ class ImagePanel(wx.PyScrolledWindow):
 
             if has_finished:
                 dc = wx.MemoryDC(self.drawing_layer)
-                dc.DrawBitmap(self.tool_layer, 0, 0)
+                tool_dc = wx.MemoryDC(self.tool_layer)
+
+                self.current_tool.post_process(self, tool_dc, dc)
+
+                tool_dc.SelectObject(wx.NullBitmap)
+                tool_dc.Destroy()
+
                 dc.SelectObject(wx.NullBitmap)
                 dc.Destroy()
 

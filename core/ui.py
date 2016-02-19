@@ -130,8 +130,8 @@ class UI:
 
         self.add_back_tool()
         self.color_tool = self.add_tool("", icons.RECTANGLE_FILLED, self.on_select_color)
-        self.add_draw_tool("Pencil", icons.PENCIL, tools.PencilTool())
-        self.add_draw_tool("Eraser", icons.CANCEL, tools.EraserTool())
+        self.add_draw_tool("Pencil", icons.PENCIL, tools.PencilTool)
+        self.add_draw_tool("Eraser", icons.CANCEL, tools.EraserTool)
         self.add_tool("Brush", icons.BRUSH, self.on_back)
         self.add_tool("Fill", icons.RECTANGLE_FILLED, self.on_back)
         self.add_tool("Shapes", icons.RECTANGLE, self.on_shapes)
@@ -157,12 +157,14 @@ class UI:
         self.toolbar.ClearTools()
 
         self.add_back_tool(self.on_edit)
-        self.add_draw_tool("Line", icons.RECTANGLE, tools.LineTool())
-        self.add_draw_tool("Ellipsis", icons.RECTANGLE, tools.EllipsisTool())
-        self.add_draw_tool("Rectangle", icons.RECTANGLE, tools.RectangleTool())
+        self.color_tool = self.add_tool("", icons.RECTANGLE_FILLED, self.on_select_color)
+        self.add_draw_tool("Line", icons.RECTANGLE, tools.LineTool)
+        self.add_draw_tool("Ellipsis", icons.RECTANGLE, tools.EllipsisTool)
+        self.add_draw_tool("Rectangle", icons.RECTANGLE, tools.RectangleTool)
 
         self.toolbar.Realize()
 
+        self.update_color_tool()
         self.image_panel.set_tool(tools.LineTool())
 
     def fill_gallery_toolbar(self):
@@ -191,10 +193,9 @@ class UI:
     def add_draw_tool(self, label, icon, canvas_tool):
         bitmap = icons.icon(icon)
         tool = self.toolbar.AddRadioLabelTool(wx.ID_ANY, label=label, bitmap=bitmap, shortHelp=label)
-        tool.SetClientData(canvas_tool)
 
         def on_draw_tool(event):
-            self.image_panel.set_tool(canvas_tool)
+            self.image_panel.set_tool(canvas_tool())
 
         self.app.Bind(wx.EVT_MENU, on_draw_tool, tool)
 
